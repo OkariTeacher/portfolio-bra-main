@@ -14,11 +14,22 @@
 # render_template -> abre um arquivo HTML da pasta "templates"
 # request       -> permite ler o que o visitante enviou pelo formulário
 from flask import Flask, render_template, request
+from flask_sqlalchemy import SQLAlchemy
 
 # Cria o aplicativo. O __name__ ajuda o Flask a achar sozinho
 # as pastas "templates" (HTML) e "static" (CSS e imagens).
 app = Flask(__name__)
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///feedback.db'
+db = SQLAlchemy(app)
+
+# Cada classe que herda de db.Model vira uma TABELA no banco
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    
+    
 
 # ------------------------------------------------------------
 # PÁGINA INICIAL
@@ -44,6 +55,9 @@ def process_form():
     # request.form.get('nome') devolve o valor do campo com esse "name".
     # Se o botão NÃO foi clicado, devolve None (que conta como "falso").
     button_python = request.form.get('button_python')
+    button_discord = request.form.get('button_discord')
+    button_html = request.form.get('button_html')
+    button_db = request.form.get('button_db')
 
     # (Sprint 2): faça o mesmo para as outras habilidades!
     # Dica: copie a linha de cima e troque o nome. Exemplo:
@@ -57,6 +71,9 @@ def process_form():
     return render_template(
         'index.html',
         button_python=button_python,
+        button_discord=button_discord,
+        button_html=button_html,
+        button_db=button_db
     )
 
 
@@ -76,7 +93,8 @@ def feedback():
 
     # (desafio): salvar o feedback em um arquivo ou em um banco de dados.
     # Veja as dicas no README.
-
+    db.session.add(Feedback(email=email, text=text))
+    db.session.commit()
     # feedback_sent=True faz o HTML mostrar a mensagem de agradecimento.
     return render_template('index.html', feedback_sent=True, email=email)
 
